@@ -133,7 +133,7 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: /
-      RoleName: !Sub ${AppName}-${Stage}-deploy-lambda
+      RoleName: !Sub ${AppName}-${Stage}-versioning-lambda
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSLambdaFullAccess
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
@@ -143,7 +143,7 @@ Resources:
   VersioningLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub ${AppName}-${Stage}-deploy
+      FunctionName: !Sub ${AppName}-${Stage}-versioning
       Description: Deploy Lambda.
       Handler: index.lambda_handler
       Role: !GetAtt VersioningLambdaRole.Arn
@@ -167,17 +167,19 @@ Resources:
 
             # versioning
             res = lambda_client.publish_version(
-                FunctionName = target_lambda,
-                Description = job_id
+              FunctionName = target_lambda,
+              Description = job_id
             )
+            print(res)
 
             # alias
             response = client.create_alias(
-                FunctionName = target_lambda,
-                Name = os.environ["Stage"],
-                FunctionVersion=res["Version"],
-                Description = Description = job_id
+              FunctionName = target_lambda,
+              Name = os.environ["Stage"],
+              FunctionVersion=res["Version"],
+              Description = job_id
             )
+            print(response)
 
             code_pipeline.put_job_success_result(jobId=job_id)
             return response
