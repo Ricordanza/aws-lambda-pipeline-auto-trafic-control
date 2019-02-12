@@ -189,8 +189,8 @@ Resources:
             response = deploy_client.create_deployment(
               applicationName = os.environ["app_name"],
               deploymentGroupName = os.environ["group_name"],
-              description = job_id
-              revision={
+              description = job_id,
+              revision = {
                 "revisionType": "String",
                 "string": {
                   "content": appspec
