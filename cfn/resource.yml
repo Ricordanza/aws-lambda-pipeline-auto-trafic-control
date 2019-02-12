@@ -98,6 +98,7 @@ Resources:
       RoleName: !Sub ${AppName}-${Stage}-deploy
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
 
   CodeDeployApplication:
     Type: AWS::CodeDeploy::Application
@@ -139,6 +140,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AWSCodeDeployFullAccess
 
   VersioningLambda:
     Type: AWS::Lambda::Function
@@ -157,14 +159,13 @@ Resources:
           def lambda_handler(event, context):
             print(event)
 
-            lambda_client = boto3.client('lambda')
-            code_pipeline = boto3.client('codepipeline')
+            code_pipeline = boto3.client("codepipeline")
+            lambda_client = boto3.client("lambda")
+            deploy_client = boto3.client("codedeploy")
 
-            job_id = event['CodePipeline.job']['id']
-            job = event["CodePipeline.job"]["data"]
+            job_id = event["CodePipeline.job"]["id"]
             target_lambda = job["actionConfiguration"]["configuration"]["UserParameters"]
-            artifact = job["inputArtifacts"][0]
-            s3Location = artifact["location"]["s3Location"]
+            stage = os.environ["stage"]
 
             # versioning
             res = lambda_client.publish_version(
@@ -172,21 +173,39 @@ Resources:
               Description = job_id
             )
             print(res)
+            t_version = res["Version"]
 
-            # alias
-            response = lambda_client.update_alias(
+            # deplpy
+            res = lambda_client.get_alias(
               FunctionName = target_lambda,
-              Name = os.environ["stage"],
-              FunctionVersion = res["Version"],
-              Description = job_id
+              Name = stage
             )
-            print(response)
+            print(res)
+            c_version = res["FunctionVersion"]
+
+            appspec = f"version: 0.0\nResources:\n  - LambdaFunction:\n      Type: AWS::Lambda::Function\n      Properties:\n        Name: {target_lambda}\n        Alias: {stage}\n        CurrentVersion: {c_version}\n        TargetVersion: {t_version}"
+            print(appspec)
+
+            response = deploy_client.create_deployment(
+              applicationName = os.environ["app_name"],
+              deploymentGroupName = os.environ["group_name"],
+              description = job_id
+              revision={
+                "revisionType": "String",
+                "string": {
+                  "content": appspec
+                }
+              }
+            )
 
             code_pipeline.put_job_success_result(jobId=job_id)
             return response
+
       Environment:
         Variables:
           stage: !Ref Stage
+          app_name: !Ref CodeDeployApplication
+          group_name: !Ref CodeDeployDeploymentGroup
       Runtime: python3.6
       Timeout: 300
 
@@ -333,7 +352,7 @@ Resources:
             Configuration: 
               ProjectName: !Ref CodeBuildProject
             RunOrder: 1
-        - Name: CFnDeploy
+        - Name: CFn
           Actions:
           - Name: CFnAction
             ActionTypeId: 
@@ -375,6 +394,7 @@ Resources:
               - Name: SourceArtifact
               - Name: BuildArtifact
             RunOrder: 1
+
 Outputs:
 
   Bucket:
