@@ -136,6 +136,11 @@ Resources:
       FunctionName: !Ref ExecuteLambda
       FunctionVersion: !GetAtt ExecuteLambdaVersion.Version
       Name: !Ref Stage
+      RoutingConfig:
+        AdditionalVersionWeights: 
+          - FunctionVersion: !GetAtt ExecuteLambdaVersion.Version
+            FunctionWeight: 1.0
+
     UpdatePolicy:
       CodeDeployLambdaAliasUpdate:
         ApplicationName: {"Fn::ImportValue": !Join [ "-", [!Ref AppName, !Ref Stage, codedeploy, application] ]}
