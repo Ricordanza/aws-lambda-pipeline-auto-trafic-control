@@ -164,6 +164,7 @@ Resources:
             deploy_client = boto3.client("codedeploy")
 
             job_id = event["CodePipeline.job"]["id"]
+            job = event["CodePipeline.job"]["data"]
             target_lambda = job["actionConfiguration"]["configuration"]["UserParameters"]
             stage = os.environ["stage"]
 
