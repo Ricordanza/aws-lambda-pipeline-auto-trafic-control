@@ -176,7 +176,7 @@ Resources:
             # alias
             response = lambda_client.create_alias(
               FunctionName = target_lambda,
-              Name = os.environ["Stage"],
+              Name = os.environ["stage"],
               FunctionVersion = res["Version"],
               Description = job_id
             )
