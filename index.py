@@ -11,5 +11,5 @@ def lambda_handler(event, context):
             "access-control-allow-methods": "GET,OPTIONS",
             "access-control-allow-origin": "*"
         },
-        "body": '{"result":"Hello from Lambda!!!"}'
+        "body": '{"result":"Hello from Lambda!"}'
     }
