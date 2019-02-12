@@ -111,7 +111,8 @@ Resources:
     Properties:
       DeploymentGroupName: !Sub ${AppName}-${Stage}-deployment-group
       ApplicationName: !Ref CodeDeployApplication
-      DeploymentConfigName: CodeDeployDefault.LambdaCanary10Percent5Minutes
+      # DeploymentConfigName: CodeDeployDefault.LambdaCanary10Percent5Minutes
+      DeploymentConfigName: CodeDeployDefault.LambdaAllAtOnce
       DeploymentStyle:
         DeploymentType: BLUE_GREEN
         DeploymentOption: WITH_TRAFFIC_CONTROL
