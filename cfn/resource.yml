@@ -173,7 +173,7 @@ Resources:
             print(res)
 
             # alias
-            response = client.create_alias(
+            response = lambda_client.create_alias(
               FunctionName = target_lambda,
               Name = os.environ["Stage"],
               FunctionVersion=res["Version"],
